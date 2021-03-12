@@ -1,0 +1,193 @@
+# creamos las redes
+networks:
+  hasher:
+    internal: true 
+  redis:
+    internal: true 
+  rng: 
+    internal: true 
+  webui:
+    internal: false 
+  worker:
+    internal: true 
+ # creamos los balanceadores de carga
+ services:
+    #el nombre el servicio puede es un fully qualified domain name (FQDN), puede ser nombre largo, no solo hasher
+    hasher:
+      deploy:
+        mode: replicated
+        placement:
+          constraints:
+            - node.role == worker
+        replicas: 1
+        resources:
+          limits:
+            cpus: "0.1" 
+            memory: 100M
+          # si no pones reservations, vale también, no se reserva al principio y se iría cogiendo a medida que se necesita sin pasarse de los límites
+          reservations:
+            cpus: "0.1" 
+            memory: 100M
+      expose:
+        - 8080
+      healthcheck:
+        interval: 10s
+        retries: 3 
+        start_period: 30s
+        test: wget -q --spider localhost:8080
+        timeout: 1s
+      image: mjgrppr/dockercoins:latest-hasher
+      # image: mjgrppr/dockercoin- hasher_latest --> si hacemos un proyecto por microservicio
+      networks:
+        # red que hemos creado (se llama hasher)
+        - hasher
+    #servicio redis
+    redis:
+      deploy:
+        mode: replicated
+        placement:
+          constraints:
+            - node.role == worker
+        replicas: 1
+        resources:
+          limits:
+            cpus: "0.1" 
+            memory: 100M
+          # si no pones reservations, vale también, no se reserva al principio y se iría cogiendo a medida que se necesita sin pasarse de los límites
+          reservations:
+            cpus: "0.1" 
+            memory: 100M
+      expose:
+        # puerto por defecto de redis
+        - 6379
+      healthcheck:
+        interval: 10s
+        retries: 3 
+        start_period: 30s
+        # probamos simplemente que el cliente de redis funciona, lo suyo sería conectar, lanzar una query y verificar parte de la respuesta
+        test: redis-cli 
+        timeout: 1s
+      #imagen oficial de redis
+      image: redis:6.0.9-alpine3.12@sha256:aa31e6d2afc72d2222ed3953587197c324f615861771637a64053f9d99ba4b74
+      networks:
+        # red que hemos creado (se llama redis)
+        - redis 
+      # redis necesita disco para escribir para cuando se llena la memoria y ya sabemos que openshift no nos deja escribir
+      volumes:
+        # - nombre_carpeta: carpeta_en_contenedor
+        # carpeta en contenedor: Vamos a dockerHub, buscamos redis, pinchamos en una version, nos lleva al dockerfile de redis y 
+        # buscamos volume para ver qué tiene ahí redis, "/data"
+        - redis:/data 
+    #siguiente servicio rng
+    rng:
+      deploy:
+        # mode: global --> daemonSet --> app que se despliega una vez por worker por la naturaleza del random
+        mode: global
+        placement:
+          constraints:
+            - node.role == worker
+        # replicas: 1 --> no se puede replicar un daemonSet
+        resources:
+          limits:
+            cpus: "0.1" 
+            memory: 100M
+          # si no pones reservations, vale también, no se reserva al principio y se iría cogiendo a medida que se necesita sin pasarse de los límites
+          reservations:
+            cpus: "0.1" 
+            memory: 100M
+      expose:
+        - 8080
+      healthcheck:
+        interval: 10s
+        retries: 3 
+        start_period: 30s
+        test: wget -q --spider localhost:8080
+        timeout: 1s
+      image: mjgrppr/dockercoins:latest-rng
+      networks:
+        # red que hemos creado (se llama rng)
+        - rng 
+    #siguiente servicio webui
+    webui:
+      deploy:
+        mode: replicated
+        placement:
+          constraints:
+            - node.role == worker
+        replicas: 1 
+        resources:
+          limits:
+            cpus: "0.1" 
+            memory: 100M
+          # si no pones reservations, vale también, no se reserva al principio y se iría cogiendo a medida que se necesita sin pasarse de los límites
+          reservations:
+            cpus: "0.1" 
+            memory: 100M
+      expose:
+        - 8080
+      healthcheck:
+        interval: 10s
+        retries: 3 
+        start_period: 30s
+        #test: wget -q --spider localhost:8080
+        # cambiamos test porque esta imagen tiene curl
+        # docker run --rm nombre_imagen which curl   --> para comprobar que la imagen tiene curl
+        test: curl -f localhost:8080
+        timeout: 1s
+      image: mjgrppr/dockercoins:latest-webui
+      networks:
+        # webui se conecta con la bbdd redis
+        - redis
+        # red que hemos creado (se llama webui)
+        - webui 
+    #seguiente servicio (worker)
+    worker:
+      deploy:
+        mode: replicated
+        placement:
+          constraints:
+            - node.role == worker
+        replicas: 1
+        resources:
+          limits:
+            cpus: "0.1" 
+            memory: 100M
+          # si no pones reservations, vale también, no se reserva al principio y se iría cogiendo a medida que se necesita sin pasarse de los límites
+          reservations:
+            cpus: "0.1" 
+            memory: 100M
+      #expose:    --> No expone puertos
+      #  - 8080
+      healthcheck:
+        interval: 10s
+        retries: 3 
+        start_period: 30s
+        # como conecta con bbdd,   vemos que el puerto 6379 ha establecido conexión 
+        test: netstat -nt | grep ESTABLISHED | grep -q 6379
+        timeout: 1s
+      image: mjgrppr/dockercoins:latest-worker
+      # image: mjgrppr/dockercoin- worker --> si hacemos un proyecto por microservicio
+      networks:
+        # el worker se conecta a hasher, redis y rng
+        - hasher
+        - redis
+        - rng
+        # red que hemos creado (se llama worker)
+        - worker
+version: '3.8'
+volumes:
+  redis:
+
+
+
+
+        
+        
+        
+        
+              
+        
+        
+        
+    
+    
