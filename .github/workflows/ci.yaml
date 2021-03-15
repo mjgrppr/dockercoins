@@ -12,18 +12,43 @@ jobs:
     - name: test
       run: |
         set -x
-        docker build -t test .
-        docker run -d --name testcontainer test
-        while true 
+        # bucle para construir todas las imágenes (docker build -t nombre_servicio nombre_carpeta_con_imagen
+        for app in hasher redis rng webui worker
           do \
-            sleep 10
-            docker exec testcontainer ps | grep 'php -f index.php' && break
+            docker build -t mjgrppr/dockercoins:testing-${app} ${app}
           done
+        # ahora se crean las redes, una red para cada micro
+        for app in hasher redis rng webui worker
+          do \
+            docker network create ${app}
+          done
+        #Ejecutamos los contenedores
+        # primero bbdd --> docker run -d --name nombre --network nombre_d -v nombre_volumen base_datos_a_descargar
+        docker run -d --name redis --network redis -v redis:/data redis
+        for app in hasher rng webui worker
+          do \
+            docker run -d --name ${app} --network  ${app} mjgrppr/dockercoins:testing-${app}
+          done
+        # conectar los contenedores a las redes: worker & webuid deben conectarse a redis
+        for app in webui worker
+          do \
+            docker network connect redis ${app}
+          done
+        # contenedor worker conectado a hasher y rng
+        for network in hasher rng
+          do \
+            docker network connect ${network} worker
+          done
+        #testeamos la app
         while true
           do \
             sleep 10
-            docker logs testcontainer 2>& 1 | grep 'PHP .* Development Server .* started' && break 
-          done      
+            docker logs webui 2>& 1 | grep 'WEBUI running on port' && break
+          done
+        for app in hasher redis rng worker
+          do \
+            docker logs ${app}
+          done
   swarm:
     runs-on: ubuntu-18.04
     steps:
