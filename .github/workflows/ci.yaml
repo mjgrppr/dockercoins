@@ -12,7 +12,7 @@ jobs:
     - name: test
       run: |
         set -x
-        # bucle para construir todas las imágenes (docker build -t nombre_servicio nombre_carpeta_con_imagen
+        # buclepara construir todas las imágenes (docker build -t nombre_servicio nombre_carpeta_con_imagen
         for app in hasher rng webui worker
           do \
             docker build -t mjgrppr/dockercoins:testing-${app} ${app}
