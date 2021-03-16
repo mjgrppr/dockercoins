@@ -32,7 +32,7 @@ services:
       start_period: 30s
       test: wget -q --spider localhost:8080
       timeout: 1s
-    image: terferre/dockercoins:latest-hasher
+    image: mjgrppr/dockercoins:latest-hasher
     # image: terferre/dockercoins-hasher:latest esto genera q proyecto x microservicio
     networks:
       - hasher
@@ -86,7 +86,7 @@ services:
       start_period: 30s
       test: wget -q --spider localhost:8080
       timeout: 1s
-    image: terferre/dockercoins:latest-rng
+    image: mjgrppr/dockercoins:latest-rng
     networks:
       - rng
     # volums escribe en disco, p openshift
@@ -112,7 +112,7 @@ services:
       start_period: 30s
       test: curl -f localhost:8080
       timeout: 1s
-    image: terferre/dockercoins:latest-webui
+    image: mjgrppr/dockercoins:latest-webui
     networks:
       - redis
       - webui
@@ -136,7 +136,7 @@ services:
       start_period: 30s
       test: netstat -nt | grep ESTABLISHED | grep -q 6379
       timeout: 1s
-    image: terferre/dockercoins:latest-worker
+    image: mjgrppr/dockercoins:latest-worker
     networks:
       - hasher
       - redis
