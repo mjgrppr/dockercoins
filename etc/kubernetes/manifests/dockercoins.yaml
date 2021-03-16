@@ -1,18 +1,16 @@
-#creamos rng que es DaemonSet (una sola instancia por máquina virtual)
 apiVersion: apps/v1
 kind: DaemonSet
-metadata:
+metadata: 
   name: rng
 spec:
   selector: 
     matchLabels:
-      # aquí se puede poner los pares claves: valor que se quiera para identificar
       app: rng
-  template:
-    metadata:
-      labels:
-        app: rng 
-    spec:
+  template: 
+    metadata: 
+      labels: 
+        app: rng        
+    spec: 
       containers: 
         -
           image: mjgrppr/dockercoins:latest-rng
@@ -22,27 +20,21 @@ spec:
             -
               containerPort: 8080
               protocol: TCP
-          #livenessProbe:
-          #readinessProbe:
-          #resources:
 ---
-# Ahora creamos el hasher --> Deployment (se ejecuta n veces por máquina virtual)
 apiVersion: apps/v1
 kind: Deployment
-metadata:
+metadata: 
   name: hasher
 spec:
-  # máximo 100 replicas por máquina virtual
   replicas: 1
   selector: 
     matchLabels:
-      # aquí se puede poner los pares claves: valor que se quiera para identificar
       app: hasher
-  template:
-    metadata:
-      labels:
-        app: hasher 
-    spec:
+  template: 
+    metadata: 
+      labels: 
+        app: hasher        
+    spec: 
       containers: 
         -
           image: mjgrppr/dockercoins:latest-hasher
@@ -52,27 +44,21 @@ spec:
             -
               containerPort: 8080
               protocol: TCP
-          #livenessProbe:
-          #readinessProbe:
-          #resources:
 ---
-# Ahora creamos el redis --> Deployment (se ejecuta n veces por máquina virtual)
 apiVersion: apps/v1
 kind: Deployment
-metadata:
+metadata: 
   name: redis
 spec:
-  # máximo 100 replicas por máquina virtual
   replicas: 1
   selector: 
     matchLabels:
-      # aquí se puede poner los pares claves: valor que se quiera para identificar
       app: redis
-  template:
-    metadata:
-      labels:
-        app: redis 
-    spec:
+  template: 
+    metadata: 
+      labels: 
+        app: redis        
+    spec: 
       containers: 
         -
           image: redis
@@ -86,32 +72,25 @@ spec:
             -
               mountPath: /data
               name: redis
-          #livenessProbe:
-          #readinessProbe:
-          #resources:
       volumes:
         -
-          #el mismo nombre que el volumeMount
           name: redis
           emptyDir: {}
-
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata:
+metadata: 
   name: webui
 spec:
-  # máximo 100 replicas por máquina virtual
   replicas: 1
   selector: 
     matchLabels:
-      # aquí se puede poner los pares claves: valor que se quiera para identificar
       app: webui
-  template:
-    metadata:
-      labels:
-        app: webui 
-    spec:
+  template: 
+    metadata: 
+      labels: 
+        app: webui        
+    spec: 
       containers: 
         -
           image: mjgrppr/dockercoins:latest-webui
@@ -121,91 +100,72 @@ spec:
             -
               containerPort: 8080
               protocol: TCP
-          #livenessProbe:
-          #readinessProbe:
-          #resources:
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata:
+metadata: 
   name: worker
 spec:
-  # máximo 100 replicas por máquina virtual
   replicas: 1
   selector: 
     matchLabels:
-      # aquí se puede poner los pares claves: valor que se quiera para identificar
       app: worker
-  template:
-    metadata:
-      labels:
-        app: worker 
-    spec:
+  template: 
+    metadata: 
+      labels: 
+        app: worker        
+    spec: 
       containers: 
         -
           image: mjgrppr/dockercoins:latest-worker
           imagePullPolicy: Always
           name: worker
 ---
-#Creamos los servicios (están en la sección core,no necesario poner core/v1
 apiVersion: v1
-kind: Services
+kind: Service
 metadata:
   name: hasher
 spec:
   ports:
     -
-      # puerto del balanceador de carga
       port: 8080
-      #puerto del contenedor, puede ser distinto en kubernetes, pero no en swarm
       targetPort: 8080
   selector:
-    #etiqueta de los contenedores,  app
     app: hasher
----  
+---
 apiVersion: v1
-kind: Services
+kind: Service
 metadata:
   name: redis
 spec:
   ports:
     -
-      # puerto del balanceador de carga
       port: 6379
-      #puerto del contenedor, puede ser distinto en kubernetes, pero no en swarm
       targetPort: 6379
   selector:
-    #etiqueta de los contenedores,  app
     app: redis
----  
-#Creamos los servicios (están en la sección core,no necesario poner core/v1
+---
 apiVersion: v1
-kind: Services
+kind: Service
 metadata:
   name: rng
 spec:
   ports:
     -
-      # puerto del balanceador de carga
       port: 8080
-      #puerto del contenedor, puede ser distinto en kubernetes, pero no en swarm
       targetPort: 8080
   selector:
-    #etiqueta de los contenedores,  app
     app: rng
----  
+---
 apiVersion: v1
-kind: Services
+kind: Service
 metadata:
   name: webui
 spec:
   ports:
     -
-      # puerto del balanceador de carga
       port: 8080
-      #puerto del contenedor, puede ser distinto en kubernetes, pero no en swarm
       targetPort: 8080
   selector:
-    #etiqueta de los contenedores,  app
     app: webui
----  
+---
