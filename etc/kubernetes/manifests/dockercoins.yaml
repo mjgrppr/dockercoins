@@ -17,6 +17,7 @@ spec:
         -
           image: mjgrppr/dockercoins:latest-rng
           imagePullPolicy: Always
+          name: rng
           ports: 
             -
               containerPort: 8080
@@ -46,6 +47,7 @@ spec:
         -
           image: mjgrppr/dockercoins:latest-hasher
           imagePullPolicy: Always
+          name: hasher
           ports: 
             -
               containerPort: 8080
@@ -75,6 +77,7 @@ spec:
         -
           image: redis
           imagePullPolicy: Always
+          name: redis
           ports: 
             -
               containerPort: 6379
@@ -113,6 +116,7 @@ spec:
         -
           image: mjgrppr/dockercoins:latest-webui
           imagePullPolicy: Always
+          name: webui
           ports: 
             -
               containerPort: 8080
@@ -141,6 +145,7 @@ spec:
         -
           image: mjgrppr/dockercoins:latest-worker
           imagePullPolicy: Always
+          name: worker
 ---
 #Creamos los servicios (están en la sección core,no necesario poner core/v1
 apiVersion: v1
