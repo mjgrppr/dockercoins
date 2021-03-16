@@ -12,38 +12,36 @@ jobs:
     - name: test
       run: |
         set -x
-        # buclepara construir todas las imágenes (docker build -t nombre_servicio nombre_carpeta_con_imagen
         for app in hasher rng webui worker
           do \
             docker build -t mjgrppr/dockercoins:testing-${app} ${app}
           done
-        # ahora se crean las redes, una red para cada micro
+        #creamos redes p cada uno
         for app in hasher redis rng webui worker
           do \
             docker network create ${app}
           done
-        #Ejecutamos los contenedores
-        # primero bbdd --> docker run -d --name nombre --network nombre_d -v nombre_volumen base_datos_a_descargar
+        #ejecyutamos container y creamos volumen
         docker run -d --name redis --network redis -v redis:/data redis
-        for app in hasher rng webui worker
+        # 
+        for app in hasher rng webui worker 
           do \
-            docker run -d --name ${app} --network  ${app} mjgrppr/dockercoins:testing-${app}
+            docker run -d --name ${app} --network ${app} mjgrppr/dockercoins:testing-${app}
           done
-        # conectar los contenedores a las redes: worker & webuid deben conectarse a redis
+        #conectar los contenedores a las redes
         for app in webui worker
           do \
             docker network connect redis ${app}
           done
-        # contenedor worker conectado a hasher y rng
-        for network in hasher rng
+        for network in hasher rng 
           do \
             docker network connect ${network} worker
           done
-        #testeamos la app
+        #testear app
         while true
           do \
             sleep 10
-            docker logs hasher 2>& 1 | grep 'Sinatra .* has taken the stage on .* for development with backup from Thin' && break
+            docker logs hasher 2>& 1 | grep '== Sinatra .* has taken the stage on .* for development with backup from Thin' && break
           done
         while true
           do \
@@ -76,7 +74,7 @@ jobs:
         #creo imagen image
         for app in hasher rng webui worker
           do \
-            docker build -t terferre/dockercoins:testing-${app} ${app}
+            docker build -t mjgrppr/dockercoins:testing-${app} ${app}
           done
         docker swarm init
         project=dockercoins
@@ -126,7 +124,7 @@ jobs:
         project=dockercoins
         #creo imagen image
         for app in hasher rng webui worker
-          do \
+          do
             docker build -t mjgrppr/${project}:testing-${app} ${app}
           done
         #install kubernetes en ubunto
@@ -151,7 +149,7 @@ jobs:
         kubectl apply -f https://docs.projectcalico.org/v3.17/manifests/calico.yaml
         #comprobar q el cluster esta listo
         while true
-          do \
+          do 
             kubectl get node | grep Ready | grep -v NotReady && break
             sleep 10
           done
@@ -161,6 +159,7 @@ jobs:
         #habilitar el master
         master=$( kubectl get node | grep master | awk '{ print $1 }' ) 
         kubectl taint node ${master} node-role.kubernetes.io/master:NoSchedule-
+        
         compose=etc/kubernetes/manifests/${project}.yaml
         #sustituyo latest x testing y despliego con compose
         sed -i /image:/s/latest/testing/ ${compose}
@@ -174,39 +173,36 @@ jobs:
         app=hasher
         pattern='== Sinatra .* has taken the stage on .* for development with backup from Thin'
         while true
-          do \
+          do 
             sleep 10
-             kubectl logs deploy/${app}  2>& 1 | grep ${pattern} && break
-          done      
+            kubectl logs deploy/${app} 2>& 1 | grep "${pattern}" && break 
+          done
         app=redis
         pattern='Ready to accept connections'
         while true
-          do \
+          do 
             sleep 10
-            kubectl logs deploy/${app}  2>& 1 | grep ${pattern} && break
-          done      
+            kubectl logs deploy/${app} 2>& 1 | grep "${pattern}" && break 
+          done
         app=rng
         pattern='Running on'
         while true
-          do \
+          do 
             sleep 10
-            kubectl logs deploy/${app}  2>& 1 | grep ${pattern} && break
-          done      
+            kubectl logs deploy/${app} 2>& 1 | grep "${pattern}" && break 
+          done
         app=webui
         pattern='WEBUI running on port'
         while true
-          do \
+          do 
             sleep 10
-            kubectl logs deploy/${app}  2>& 1 | grep ${pattern} && break
-          done      
+            kubectl logs deploy/${app} 2>& 1 | grep "${pattern}" && break 
+          done
         app=worker
         pattern='Coin found'
         while true
-          do \
+          do 
             sleep 10
-            kubectl logs deploy/${app}  2>& 1 | grep ${pattern} && break
-          done      
-                        
-            
-            
-       
+            kubectl logs deploy/${app} 2>& 1 | grep "${pattern}" && break 
+          done
+
