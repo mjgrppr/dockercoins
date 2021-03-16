@@ -93,6 +93,7 @@ jobs:
         while true
           do \
             sleep 10
+            docker service logs ${project}_hasher
             docker service logs ${project}_hasher 2>& 1 | grep '== Sinatra .* has taken the stage on .* for development with backup from Thin' && break
           done
         while true
